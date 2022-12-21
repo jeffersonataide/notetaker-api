@@ -1,4 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use std::net;
 
 mod handlers;
@@ -7,7 +10,8 @@ mod handlers;
 async fn main() {
     let app = Router::new()
         .route("/", get(handlers::hello_notetaker))
-        .route("/hello_name", get(handlers::hello_name));
+        .route("/hello_name", get(handlers::hello_name))
+        .route("/notes", post(handlers::create_note));
 
     let addr = net::SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on: {addr}");
