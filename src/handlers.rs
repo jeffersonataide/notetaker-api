@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 pub async fn hello_notetaker() -> &'static str {
-    return "Hello, Notetaker!";
+    "Hello, Notetaker!"
 }
 
 #[derive(Debug, Deserialize)]
@@ -13,7 +13,7 @@ pub struct User {
 
 // Handle receiving query parameters
 pub async fn hello_name(user: Query<User>) -> String {
-    return format!("Hello, {} \n", user.name);
+    format!("Hello, {} \n", user.name)
 }
 
 #[derive(Debug, Serialize)]
