@@ -34,3 +34,11 @@ pub async fn create_note(Json(payload): Json<CreateNote>) -> Json<Value> {
         "note": note
     }))
 }
+
+pub async fn list_notes() -> Json<Value> {
+    let note = Note {
+        text: "Test note".to_string(),
+    };
+
+    Json(json!({ "notes": vec![note] }))
+}
