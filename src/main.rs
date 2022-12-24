@@ -11,7 +11,8 @@ async fn main() {
         .route(
             "/notes",
             get(handlers::list_notes).post(handlers::create_note),
-        );
+        )
+        .route("/notes/:note_id", get(handlers::get_note));
 
     let addr = net::SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on: {addr}");
