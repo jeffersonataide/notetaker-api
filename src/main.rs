@@ -26,7 +26,7 @@ async fn main() {
         .route("/notes/:note_id", get(handlers::get_note))
         .layer(TraceLayer::new_for_http());
 
-    let port = std::env::var("PORT").unwrap_or("3000".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{port}")).unwrap();
     tracing::debug!("Listening on: {addr}");
 
