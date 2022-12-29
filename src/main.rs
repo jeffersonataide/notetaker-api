@@ -1,5 +1,6 @@
 use axum::{routing::get, Router};
 use std::net;
+use std::str::FromStr;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -25,7 +26,8 @@ async fn main() {
         .route("/notes/:note_id", get(handlers::get_note))
         .layer(TraceLayer::new_for_http());
 
-    let addr = net::SocketAddr::from(([127, 0, 0, 1], 3000));
+    let port = std::env::var("PORT").unwrap_or("3000".to_string());
+    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{port}")).unwrap();
     tracing::debug!("Listening on: {addr}");
 
     axum::Server::bind(&addr)
