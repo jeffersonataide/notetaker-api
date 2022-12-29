@@ -16,7 +16,18 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer().compact())
         .init();
 
-    let app = Router::new()
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{port}")).unwrap();
+    tracing::debug!("Listening on: {addr}");
+
+    axum::Server::bind(&addr)
+        .serve(app().into_make_service())
+        .await
+        .unwrap();
+}
+
+fn app() -> Router {
+    Router::new()
         .route("/", get(handlers::hello_notetaker))
         .route("/hello_name", get(handlers::hello_name))
         .route(
@@ -24,14 +35,5 @@ async fn main() {
             get(handlers::list_notes).post(handlers::create_note),
         )
         .route("/notes/:note_id", get(handlers::get_note))
-        .layer(TraceLayer::new_for_http());
-
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
-    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{port}")).unwrap();
-    tracing::debug!("Listening on: {addr}");
-
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .layer(TraceLayer::new_for_http())
 }
