@@ -58,7 +58,7 @@ pub async fn get_note(Path(note_id): Path<i32>, State(pool): State<PgPool>) -> i
     let result = sqlx::query_as!(Note, "SELECT * FROM notes WHERE id = $1;", note_id)
         .fetch_one(&pool)
         .await
-        .expect(&format!("Could not find a note where id={}", note_id));
+        .unwrap_or_else(|_| panic!("Could not find a note where id={}", note_id));
 
     tracing::debug!("Result compiled: {:?}", result);
 
