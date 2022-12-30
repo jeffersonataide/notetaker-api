@@ -1,9 +1,12 @@
 use axum::{
-    extract::{Path, Query},
+    extract::{Path, Query, State},
+    http::StatusCode,
+    response::IntoResponse,
     Json,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sqlx::PgPool;
 
 pub async fn hello_notetaker() -> &'static str {
     "Hello, Notetaker!"
@@ -21,7 +24,7 @@ pub async fn hello_name(user: Query<User>) -> String {
 
 #[derive(Debug, Serialize)]
 pub struct Note {
-    id: String,
+    id: i32,
     text: String,
 }
 
@@ -32,7 +35,7 @@ pub struct CreateNote {
 
 pub async fn create_note(Json(payload): Json<CreateNote>) -> Json<Value> {
     let note = Note {
-        id: "1".to_string(),
+        id: 1,
         text: payload.text,
     };
 
@@ -44,18 +47,20 @@ pub async fn create_note(Json(payload): Json<CreateNote>) -> Json<Value> {
 
 pub async fn list_notes() -> Json<Value> {
     let note = Note {
-        id: "1".to_string(),
+        id: 1,
         text: "Test note".to_string(),
     };
 
     Json(json!({ "notes": vec![note] }))
 }
 
-pub async fn get_note(Path(note_id): Path<String>) -> Json<Value> {
-    let note = Note {
-        id: note_id,
-        text: "sample note".to_string(),
-    };
+pub async fn get_note(Path(note_id): Path<i32>, State(pool): State<PgPool>) -> impl IntoResponse {
+    let result = sqlx::query_as!(Note, "SELECT * FROM notes WHERE id = $1;", note_id)
+        .fetch_one(&pool)
+        .await
+        .expect(&format!("Could not find a note where id={}", note_id));
 
-    Json(json!({ "note": note }))
+    tracing::debug!("Result compiled: {:?}", result);
+
+    (StatusCode::OK, Json(json!({ "note": result })))
 }
