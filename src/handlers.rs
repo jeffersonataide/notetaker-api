@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -7,20 +7,6 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::PgPool;
-
-pub async fn hello_notetaker() -> &'static str {
-    "Hello, Notetaker!"
-}
-
-#[derive(Debug, Deserialize)]
-pub struct User {
-    pub name: String,
-}
-
-// Handle receiving query parameters
-pub async fn hello_name(user: Query<User>) -> String {
-    format!("Hello, {} \n", user.name)
-}
 
 #[derive(Debug, Serialize)]
 pub struct Note {
