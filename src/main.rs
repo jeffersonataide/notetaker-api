@@ -28,13 +28,14 @@ async fn main() {
         .expect("Error while trying to connect to the database");
     tracing::debug!("Connected to the database: {:?}", pool);
 
-    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{}", config.server.port)).unwrap();
+    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{}", config.server.port))
+        .expect("Failed to create a socket address");
     tracing::debug!("Listening on: {addr}");
 
     axum::Server::bind(&addr)
         .serve(app(pool).into_make_service())
         .await
-        .unwrap();
+        .expect("Failed to start the server.");
 }
 
 fn app(pool: Pool<Postgres>) -> Router {
@@ -72,12 +73,19 @@ mod tests {
         let app = app(pool);
 
         let response = app
-            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .body(Body::empty())
+                    .expect("Failed to create a request"),
+            )
             .await
-            .unwrap();
+            .expect("Failed to get a response");
         assert_eq!(response.status(), StatusCode::OK);
 
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = hyper::body::to_bytes(response.into_body())
+            .await
+            .expect("Failed to get response body");
         assert_eq!(&body[..], b"Hello, Notetaker!")
     }
 }
