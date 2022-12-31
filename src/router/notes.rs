@@ -19,7 +19,7 @@ pub struct CreateNote {
     text: String,
 }
 
-pub async fn create_note(Json(payload): Json<CreateNote>) -> Json<Value> {
+pub async fn create(Json(payload): Json<CreateNote>) -> Json<Value> {
     let note = Note {
         id: 1,
         text: payload.text,
@@ -31,7 +31,7 @@ pub async fn create_note(Json(payload): Json<CreateNote>) -> Json<Value> {
     }))
 }
 
-pub async fn list_notes() -> Json<Value> {
+pub async fn list() -> Json<Value> {
     let note = Note {
         id: 1,
         text: "Test note".to_string(),
@@ -40,7 +40,7 @@ pub async fn list_notes() -> Json<Value> {
     Json(json!({ "notes": vec![note] }))
 }
 
-pub async fn get_note(Path(note_id): Path<i32>, State(pool): State<PgPool>) -> impl IntoResponse {
+pub async fn get(Path(note_id): Path<i32>, State(pool): State<PgPool>) -> impl IntoResponse {
     let result = sqlx::query_as!(Note, "SELECT * FROM notes WHERE id = $1;", note_id)
         .fetch_one(&pool)
         .await

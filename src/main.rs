@@ -5,7 +5,6 @@ use std::str::FromStr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod config;
-mod handlers;
 mod router;
 
 #[tokio::main]
