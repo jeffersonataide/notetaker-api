@@ -1,13 +1,12 @@
-use axum::{routing::get, Router};
 use config::Config;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::postgres::PgPoolOptions;
 use std::net;
 use std::str::FromStr;
-use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod config;
 mod handlers;
+mod router;
 
 #[tokio::main]
 async fn main() {
@@ -33,22 +32,9 @@ async fn main() {
     tracing::debug!("Listening on: {addr}");
 
     axum::Server::bind(&addr)
-        .serve(app(pool).into_make_service())
+        .serve(router::app(pool).into_make_service())
         .await
         .expect("Failed to start the server.");
-}
-
-fn app(pool: Pool<Postgres>) -> Router {
-    Router::new()
-        .route("/", get(handlers::hello_notetaker))
-        .route("/hello_name", get(handlers::hello_name))
-        .route(
-            "/notes",
-            get(handlers::list_notes).post(handlers::create_note),
-        )
-        .route("/notes/:note_id", get(handlers::get_note))
-        .with_state(pool)
-        .layer(TraceLayer::new_for_http())
 }
 
 #[cfg(test)]
@@ -70,7 +56,7 @@ mod tests {
             .await
             .expect("Error while trying to connect to the database");
 
-        let app = app(pool);
+        let app = router::app(pool);
 
         let response = app
             .oneshot(
