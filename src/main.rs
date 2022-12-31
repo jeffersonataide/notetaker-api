@@ -1,17 +1,16 @@
 use axum::{routing::get, Router};
-use dotenvy::dotenv;
+use config::Config;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::net;
 use std::str::FromStr;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod config;
 mod handlers;
 
 #[tokio::main]
 async fn main() {
-    dotenv().expect(".env file not found");
-
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -20,17 +19,16 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer().compact())
         .init();
 
-    let db_url = std::env::var("DATABASE_URL").expect("Missing DATABASE_URL environment variable");
+    let config = Config::new();
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect(&db_url)
+        .connect(&config.database.url)
         .await
         .expect("Error while trying to connect to the database");
     tracing::debug!("Connected to the database: {:?}", pool);
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
-    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{port}")).unwrap();
+    let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{}", config.server.port)).unwrap();
     tracing::debug!("Listening on: {addr}");
 
     axum::Server::bind(&addr)
