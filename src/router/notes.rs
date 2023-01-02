@@ -10,19 +10,19 @@ use sqlx::PgPool;
 
 #[derive(Debug, Serialize)]
 pub struct Note {
-    id: i32,
-    text: String,
+    id: i64,
+    content: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CreateNote {
-    text: String,
+    content: String,
 }
 
 pub async fn create(Json(payload): Json<CreateNote>) -> Json<Value> {
     let note = Note {
         id: 1,
-        text: payload.text,
+        content: payload.content,
     };
 
     Json(json!({
@@ -34,13 +34,13 @@ pub async fn create(Json(payload): Json<CreateNote>) -> Json<Value> {
 pub async fn list() -> Json<Value> {
     let note = Note {
         id: 1,
-        text: "Test note".to_string(),
+        content: "Test note".to_string(),
     };
 
     Json(json!({ "notes": vec![note] }))
 }
 
-pub async fn get(Path(note_id): Path<i32>, State(pool): State<PgPool>) -> impl IntoResponse {
+pub async fn get(Path(note_id): Path<i64>, State(pool): State<PgPool>) -> impl IntoResponse {
     let result = sqlx::query_as!(Note, "SELECT * FROM notes WHERE id = $1;", note_id)
         .fetch_one(&pool)
         .await

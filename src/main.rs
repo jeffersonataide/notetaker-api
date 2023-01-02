@@ -26,6 +26,13 @@ async fn main() {
         .expect("Error while trying to connect to the database");
     tracing::debug!("Connected to the database: {:?}", pool);
 
+    tracing::debug!("Started running migrations");
+    sqlx::migrate!()
+        .run(&pool)
+        .await
+        .expect("Error while running the migrations");
+    tracing::debug!("Finished running migrations");
+
     let addr = net::SocketAddr::from_str(&format!("0.0.0.0:{}", config.server.port))
         .expect("Failed to create a socket address");
     tracing::debug!("Listening on: {addr}");
