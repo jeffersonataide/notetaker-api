@@ -31,13 +31,15 @@ pub async fn create(Json(payload): Json<CreateNote>) -> Json<Value> {
     }))
 }
 
-pub async fn list() -> Json<Value> {
-    let note = Note {
-        id: 1,
-        content: "Test note".to_string(),
-    };
+pub async fn list(State(pool): State<PgPool>) -> impl IntoResponse {
+    let result = sqlx::query_as!(Note, "SELECT * FROM notes;")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_else(|_| panic!("Could not get the list of notes"));
 
-    Json(json!({ "notes": vec![note] }))
+    tracing::debug!("List notes result: {:?}", result);
+
+    (StatusCode::OK, Json(json!({ "notes": result })))
 }
 
 pub async fn get(Path(note_id): Path<i64>, State(pool): State<PgPool>) -> impl IntoResponse {
@@ -46,7 +48,7 @@ pub async fn get(Path(note_id): Path<i64>, State(pool): State<PgPool>) -> impl I
         .await
         .unwrap_or_else(|_| panic!("Could not find a note where id={}", note_id));
 
-    tracing::debug!("Result compiled: {:?}", result);
+    tracing::debug!("Get notes result: {:?}", result);
 
     (StatusCode::OK, Json(json!({ "note": result })))
 }
