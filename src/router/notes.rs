@@ -5,7 +5,7 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use sqlx::PgPool;
 
 #[derive(Debug, Serialize)]
@@ -19,16 +19,22 @@ pub struct CreateNote {
     content: String,
 }
 
-pub async fn create(Json(payload): Json<CreateNote>) -> Json<Value> {
-    let note = Note {
-        id: 1,
-        content: payload.content,
-    };
+pub async fn create(
+    State(pool): State<PgPool>,
+    Json(payload): Json<CreateNote>,
+) -> impl IntoResponse {
+    //
+    let result = sqlx::query_as!(
+        Note,
+        "INSERT INTO notes (content) VALUES ($1) RETURNING *;",
+        payload.content
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap_or_else(|_| panic!("Could not get the list of notes"));
+    tracing::debug!("Create note result: {:?}", result);
 
-    Json(json!({
-        "status": "created",
-        "note": note
-    }))
+    (StatusCode::CREATED, Json(json!({ "note": result })))
 }
 
 pub async fn list(State(pool): State<PgPool>) -> impl IntoResponse {
