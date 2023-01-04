@@ -23,7 +23,6 @@ pub async fn create(
     State(pool): State<PgPool>,
     Json(payload): Json<CreateNote>,
 ) -> impl IntoResponse {
-    //
     let result = sqlx::query_as!(
         Note,
         "INSERT INTO notes (content) VALUES ($1) RETURNING *;",
@@ -31,7 +30,7 @@ pub async fn create(
     )
     .fetch_one(&pool)
     .await
-    .unwrap_or_else(|_| panic!("Could not get the list of notes"));
+    .unwrap_or_else(|_| panic!("Could not create the note"));
     tracing::debug!("Create note result: {:?}", result);
 
     (StatusCode::CREATED, Json(json!({ "note": result })))
@@ -55,6 +54,25 @@ pub async fn get(Path(note_id): Path<i64>, State(pool): State<PgPool>) -> impl I
         .unwrap_or_else(|_| panic!("Could not find a note where id={}", note_id));
 
     tracing::debug!("Get notes result: {:?}", result);
+
+    (StatusCode::OK, Json(json!({ "note": result })))
+}
+
+pub async fn update(
+    State(pool): State<PgPool>,
+    Path(note_id): Path<i64>,
+    Json(payload): Json<CreateNote>,
+) -> impl IntoResponse {
+    let result = sqlx::query_as!(
+        Note,
+        "UPDATE notes SET content=$2 WHERE id=$1 RETURNING *;",
+        note_id,
+        payload.content
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap_or_else(|_| panic!("Could not update the note"));
+    tracing::debug!("Update note result: {:?}", result);
 
     (StatusCode::OK, Json(json!({ "note": result })))
 }

@@ -10,7 +10,7 @@ pub fn app(pool: Pool<Postgres>) -> Router {
         .route("/", get(hello::hello_notetaker))
         .route("/hello_name", get(hello::hello_name))
         .route("/notes", get(notes::list).post(notes::create))
-        .route("/notes/:note_id", get(notes::get))
+        .route("/notes/:note_id", get(notes::get).patch(notes::update))
         .with_state(pool)
         .layer(TraceLayer::new_for_http())
 }
