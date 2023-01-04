@@ -33,7 +33,7 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        dotenv().expect(".env file not found");
+        dotenv().ok();
         Config {
             database: DatabaseConfig::new(),
             server: ServerConfig::new(),
